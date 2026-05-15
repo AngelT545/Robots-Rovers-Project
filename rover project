@@ -1,1 +1,174 @@
+# rover.py
+
+import curses
+import time
+from gpiozero import LED, PWMOutputDevice, DigitalOutputDevice
+
+from hal.pin_config import (
+    STATUS_LED,
+    MOTOR_LEFT_ENA,
+    MOTOR_LEFT_IN1,
+    MOTOR_LEFT_IN2,
+    MOTOR_RIGHT_ENB,
+    MOTOR_RIGHT_IN3,
+    MOTOR_RIGHT_IN4,
+)
+
+# ---------------- HARDWARE ----------------
+
+led = LED(STATUS_LED)
+
+left_ena = PWMOutputDevice(MOTOR_LEFT_ENA)
+right_enb = PWMOutputDevice(MOTOR_RIGHT_ENB)
+
+left_in1 = DigitalOutputDevice(MOTOR_LEFT_IN1)
+left_in2 = DigitalOutputDevice(MOTOR_LEFT_IN2)
+
+right_in3 = DigitalOutputDevice(MOTOR_RIGHT_IN3)
+right_in4 = DigitalOutputDevice(MOTOR_RIGHT_IN4)
+
+SPEED = 1.0
+
+# ---------------- LEFT MOTOR ----------------
+
+def left_forward():
+    left_in1.on()
+    left_in2.off()
+    left_ena.value = SPEED
+
+def left_backward():
+    left_in1.off()
+    left_in2.on()
+    left_ena.value = SPEED
+
+def left_stop():
+    left_in1.off()
+    left_in2.off()
+    left_ena.value = 0
+
+# ---------------- RIGHT MOTOR ----------------
+
+def right_forward():
+    right_in3.on()
+    right_in4.off()
+    right_enb.value = SPEED
+
+def right_backward():
+    right_in3.off()
+    right_in4.on()
+    right_enb.value = SPEED
+
+def right_stop():
+    right_in3.off()
+    right_in4.off()
+    right_enb.value = 0
+
+# ---------------- MOVEMENT ----------------
+
+def stop():
+    left_stop()
+    right_stop()
+
+def forward():
+    left_forward()
+    right_forward()
+
+def backward():
+    left_backward()
+    right_backward()
+
+# FIXED: LEFT/RIGHT WERE SWITCHED
+
+def turn_left():
+    left_forward()
+    right_backward()
+
+def turn_right():
+    left_backward()
+    right_forward()
+
+# ---------------- CLEANUP ----------------
+
+def cleanup():
+
+    stop()
+
+    devices = [
+        left_ena,
+        right_enb,
+        left_in1,
+        left_in2,
+        right_in3,
+        right_in4, 
+        led
+    ]
+
+    for d in devices:
+        d.close()
+
+# ---------------- MAIN ----------------
+
+def main(stdscr):
+
+    curses.curs_set(0)
+
+    stdscr.nodelay(True)
+
+    stdscr.clear()
+
+    stdscr.addstr(
+        0,
+        0,
+        "W Forward | S Backward | A Left | D Right | SPACE Stop | Q Quit"
+    )
+
+    # Startup blink
+    for _ in range(3):
+        led.on()
+        time.sleep(0.2)
+        led.off()
+        time.sleep(0.2)
+
+    while True:
+
+        key = stdscr.getch()
+
+        if key == ord('w'):
+
+            forward()
+            stdscr.addstr(2, 0, "Moving Forward      ")
+
+        elif key == ord('s'):
+
+            backward()
+            stdscr.addstr(2, 0, "Moving Backward     ")
+
+        elif key == ord('a'):
+
+            turn_left()
+            stdscr.addstr(2, 0, "Turning Left        ")
+
+        elif key == ord('d'):
+
+            turn_right()
+            stdscr.addstr(2, 0, "Turning Right       ")
+
+        elif key == ord(' '):
+
+            stop()
+            stdscr.addstr(2, 0, "Stopped             ")
+
+        elif key == ord('q'):
+
+            break
+
+        stdscr.refresh()
+
+        time.sleep(0.01)
+
+    cleanup()
+
+# ---------------- START ----------------
+
+curses.wrapper(main)
 
