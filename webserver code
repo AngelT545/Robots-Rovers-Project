@@ -1,0 +1,58 @@
+# This code is mandatory for having the website to work if this code isn't used the website will not work
+
+from flask import Flask, Response
+import cv2
+import rover_keys
+
+app = Flask(__name__)
+
+cam = cv2.VideoCapture(0, cv2.CAP_V4L2)
+
+cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+cam.set(3, 320)
+cam.set(4, 240)
+cam.set(cv2.CAP_PROP_FPS, 15)
+
+@app.route('/forward')
+def forward():
+    rover_keys.forward()
+    return "forward"
+
+@app.route('/back')
+def back():
+    rover_keys.backward()
+    return "back"
+
+@app.route('/left')
+def left():
+    rover_keys.turn_left()
+    return "left"
+
+@app.route('/right')
+def right():
+    rover_keys.turn_right()
+    return "right"
+
+@app.route('/stop')
+def stop():
+    rover_keys.stop()
+    return "stop"
+
+@app.route('/video')
+def video():
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+def generate_frames():
+    while True:
+        success, frame = cam.read()
+        if not success:
+            break
+
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+app.run(host='0.0.0.0', port=5000)
