@@ -1,0 +1,69 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>Rover Control</title>
+</head>
+
+<body>
+
+<h1>Rover Control</h1>
+
+<button
+onmousedown="send('forward')"
+onmouseup="send('stop')">
+Forward
+</button>
+
+<br><br>
+
+<button
+onmousedown="send('left')"
+onmouseup="send('stop')">
+Left
+</button>
+
+<button
+onmousedown="send('right')"
+onmouseup="send('stop')">
+Right
+</button>
+
+<h2>Camera</h2>
+
+<img src="http://10.183.0.112:5000/video" width="320" height="240">
+
+<br><br>
+
+<button
+onmousedown="send('back')"
+onmouseup="send('stop')">
+Back
+</button>
+
+<script>
+let keys = {};
+
+function send(cmd) {
+    fetch("http://10.183.0.112:5000/" + cmd);
+}
+
+// when key is pressed
+document.addEventListener("keydown", function(event) {
+    if (keys[event.key]) return; // prevents spam repeat
+    keys[event.key] = true;
+
+    if (event.key === "w") send("forward");
+    if (event.key === "s") send("back");
+    if (event.key === "a") send("left");
+    if (event.key === "d") send("right");
+});
+
+// when key is released → stop rover
+document.addEventListener("keyup", function(event) {
+    keys[event.key] = false;
+    send("stop");
+});
+</script>
+
+</body>
+</html>
