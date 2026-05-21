@@ -32,13 +32,13 @@ SPEED = 1.0
 # ---------------- LEFT MOTOR ----------------
 
 def left_forward():
-    left_in1.on()
-    left_in2.off()
+    left_in1.off()
+    left_in2.on()
     left_ena.value = SPEED
 
 def left_backward():
-    left_in1.off()
-    left_in2.on()
+    left_in1.on()
+    left_in2.off()
     left_ena.value = SPEED
 
 def left_stop():
@@ -49,13 +49,13 @@ def left_stop():
 # ---------------- RIGHT MOTOR ----------------
 
 def right_forward():
-    right_in3.on()
-    right_in4.off()
+    right_in3.off()
+    right_in4.on()
     right_enb.value = SPEED
 
 def right_backward():
-    right_in3.off()
-    right_in4.on()
+    right_in3.on()
+    right_in4.off()
     right_enb.value = SPEED
 
 def right_stop():
@@ -69,23 +69,48 @@ def stop():
     left_stop()
     right_stop()
 
+def set_motors(left_speed, right_speed):
+
+    # LEFT MOTOR direction
+    if left_speed > 0:
+        left_in1.off()
+        left_in2.on()
+    elif left_speed < 0:
+        left_in1.on()
+        left_in2.off()
+    else:
+        left_in1.off()
+        left_in2.off()
+
+    left_ena.value = abs(left_speed)
+
+    # RIGHT MOTOR direction
+    if right_speed > 0:
+        right_in3.off()
+        right_in4.on()
+    elif right_speed < 0:
+        right_in3.on()
+        right_in4.off()
+    else:
+        right_in3.off()
+        right_in4.off()
+
+    right_enb.value = abs(right_speed)
+
 def forward():
-    left_forward()
-    right_forward()
+    set_motors(1.0, 1.0)
 
 def backward():
-    left_backward()
-    right_backward()
-
-# FIXED: LEFT/RIGHT WERE SWITCHED
+    set_motors(-1.0, -1.0)
 
 def turn_left():
-    left_forward()
-    right_backward()
+    set_motors(-0.3, 1.0)
 
 def turn_right():
-    left_backward()
-    right_forward()
+    set_motors(1.0, -0.3)
+
+def stop():
+    set_motors(0, 0)
 
 # ---------------- CLEANUP ----------------
 
@@ -167,6 +192,12 @@ def main(stdscr):
         time.sleep(0.01)
 
     cleanup()
+
+# ---------------- START ----------------
+
+if __name__ == "__main__":
+    curses.wrapper(main)
+
 
 # ---------------- START ----------------
 
