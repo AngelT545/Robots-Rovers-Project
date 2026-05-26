@@ -1,0 +1,90 @@
+import time
+from gpiozero import (
+    PWMOutputDevice,
+    DigitalOutputDevice,
+    DistanceSensor
+)
+
+from hal.pin_config import (
+    MOTOR_LEFT_ENA,
+    MOTOR_LEFT_IN1,
+    MOTOR_LEFT_IN2,
+    MOTOR_RIGHT_ENB,
+    MOTOR_RIGHT_IN3,
+    MOTOR_RIGHT_IN4,
+)
+
+# ---------------- MOTOR SETUP ----------------
+
+left_ena = PWMOutputDevice(MOTOR_LEFT_ENA)
+right_enb = PWMOutputDevice(MOTOR_RIGHT_ENB)
+
+left_in1 = DigitalOutputDevice(MOTOR_LEFT_IN1)
+left_in2 = DigitalOutputDevice(MOTOR_LEFT_IN2)
+
+right_in3 = DigitalOutputDevice(MOTOR_RIGHT_IN3)
+right_in4 = DigitalOutputDevice(MOTOR_RIGHT_IN4)
+
+SPEED = 0.7
+
+# ---------------- ULTRASONIC SENSOR ----------------
+sensor = DistanceSensor(echo=26, trigger=16)
+
+# ---------------- MOVEMENT FUNCTIONS ----------------
+
+def forward():
+    left_in1.off()
+    left_in2.on()
+    right_in3.off()
+    right_in4.on()
+    left_ena.value = SPEED
+    right_enb.value = SPEED
+
+
+def stop():
+    left_in1.off()
+    left_in2.off()
+    right_in3.off()
+    right_in4.off()
+    left_ena.value = 0
+    right_enb.value = 0
+
+
+def turn_left():
+    left_in1.off()
+    left_in2.on()
+
+    right_in3.off()
+    right_in4.on()
+
+    # softer turning (NOT full spin)
+    left_ena.value = 0.4
+    right_enb.value = 0.7
+
+# ---------------- MAIN LOOP ----------------
+
+try:
+    while True:
+
+        distance = sensor.distance * 100
+        print(f"Distance: {distance:.1f} cm")
+
+        if distance < 20:
+            print("Obstacle detected -> turning left")
+
+            stop()
+            time.sleep(0.2)
+
+            turn_left()
+            time.sleep(0.6)
+
+        else:
+            forward()
+
+        time.sleep(0.1)
+
+except KeyboardInterrupt:
+    print("Stopping rover")
+
+finally:
+    stop()
