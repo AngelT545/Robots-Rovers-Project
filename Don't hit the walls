@@ -25,9 +25,13 @@ left_in2 = DigitalOutputDevice(MOTOR_LEFT_IN2)
 right_in3 = DigitalOutputDevice(MOTOR_RIGHT_IN3)
 right_in4 = DigitalOutputDevice(MOTOR_RIGHT_IN4)
 
-SPEED = 0.7
+# ---------------- SPEED SETTINGS ----------------
 
-# ---------------- ULTRASONIC SENSOR ----------------
+FORWARD_SPEED = 0.7
+# TURN_SPEED = 1.0   # faster = better turning control
+
+# ---------------- SENSOR ----------------
+
 sensor = DistanceSensor(echo=26, trigger=16)
 
 # ---------------- MOVEMENT FUNCTIONS ----------------
@@ -37,8 +41,9 @@ def forward():
     left_in2.on()
     right_in3.off()
     right_in4.on()
-    left_ena.value = SPEED
-    right_enb.value = SPEED
+
+    left_ena.value = FORWARD_SPEED
+    right_enb.value = FORWARD_SPEED
 
 
 def stop():
@@ -46,37 +51,40 @@ def stop():
     left_in2.off()
     right_in3.off()
     right_in4.off()
+
     left_ena.value = 0
     right_enb.value = 0
 
 
 def turn_left():
-    left_in1.off()
-    left_in2.on()
+    # LEFT motor reverse
+    left_in1.on()
+    left_in2.off()
 
+    # RIGHT motor forward
     right_in3.off()
     right_in4.on()
 
-    # softer turning (NOT full spin)
-    left_ena.value = 0.4
-    right_enb.value = 0.7
+    # IMPORTANT: reduce power so it can actually turn on ground
+    left_ena.value = 0.3
+    right_enb.value = 1.0
 
 # ---------------- MAIN LOOP ----------------
 
 try:
     while True:
 
-        distance = sensor.distance * 100
+        distance = sensor.distance * 200
         print(f"Distance: {distance:.1f} cm")
 
-        if distance < 20:
+        if distance < 180:
             print("Obstacle detected -> turning left")
 
             stop()
             time.sleep(0.2)
 
             turn_left()
-            time.sleep(0.6)
+            time.sleep(4)
 
         else:
             forward()
